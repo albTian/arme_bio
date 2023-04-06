@@ -11,6 +11,7 @@ import os
 import re
 import glob
 import numpy as np
+import datetime
 
 samples = []
 
@@ -76,8 +77,26 @@ def save_txt(buff, txtfile):
     text_file.write('\n')
     text_file.close()
 
+def generate_filename(dir):
+    # Get the current date
+    now = datetime.datetime.now()
+    day = now.strftime("%d")
+    month = now.strftime("%m")
 
-def run(filename):
+    # Get the number of CSV files in the directory that match the date format
+    matching_files = [f for f in os.listdir(dir) if f.endswith('.csv') and f.startswith(f'{day}-{month}-')]
+    number = len(matching_files) + 1
+
+    # Generate the filename
+    filename = f'{dir}/{month}-{day}-{number}.csv'
+    return filename
+
+def run(dir):
+    if not os.path.isdir(dir):
+        os.makedirs(dir)
+    
+    filename = generate_filename(dir)
+    
     samples = []
     print("EE16B Front End Lab")
 
@@ -126,6 +145,6 @@ def run(filename):
 
 if __name__ == "__main__":
     if (len(sys.argv) != 2):
-        print("Usage: python collect-data.py <filename.csv>")
+        print("Usage: python collect-data.py <directory>")
         exit()
     run(sys.argv[1])
