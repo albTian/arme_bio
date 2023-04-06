@@ -10,6 +10,7 @@ import sys
 import os
 import re
 import glob
+import numpy as np
 
 samples = []
 
@@ -100,20 +101,26 @@ def run(filename):
 
     print('Collecting data... Please wait.')
 
-    curr = 0
-    # save_txt("abc123", filename)
+    second = 0
+    sample_rate = 125   # CHANGE THIS TO MATCH ARDUINO SAMPLE RATE
 
-    while (True):
-        print("looping...")
+    while (second < 30):
         samples = []
-        temp = ser.readline().decode()
-        # 125 is sampling frequency, so one line is one second
-        for i in range(125):
+
+        if second % 10 == 0:
+            print("relax your grip...")
+        if second % 10 == 5:
+            print("SQUEEZE DA BOTTLE")
+
+        for _ in range(sample_rate):
             samples.append((float)(ser.readline().decode().rstrip('\n')))
         save_txt(samples, filename)
-        print(f'{curr+1}: Done writing to ' + filename)
-        curr += 1
+        # print(f'{second+1}: Done writing to ' + filename)
+        mean = np.mean(samples)
+        print(f'{second}: {mean}')
+        second += 1
 
+    print(f"Data collection complete! Check {filename}")
     ser.close()
 
 
