@@ -61,6 +61,10 @@ void loop() {
     int signal = EMGFilter(sensor_value);
     int envelop = getEnvelop(abs(signal));
     bool blink = isGripping(signal);
+    // Serial.print(-40);
+    // Serial.print(" ");
+    // Serial.print(40);
+    // Serial.print(" ");
     Serial.println(signal);
     digitalWrite(OUTPUT_PIN, blink);
   }

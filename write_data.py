@@ -132,7 +132,9 @@ def run(dir):
             print("SQUEEZE DA BOTTLE")
 
         for _ in range(sample_rate):
-            samples.append((float)(ser.readline().decode().rstrip('\n')))
+            sample = (float)(ser.readline().decode().rstrip('\n'))
+            sample = abs(sample)
+            samples.append(sample)
         save_txt(samples, filename)
         # print(f'{second+1}: Done writing to ' + filename)
         mean = np.mean(samples)
