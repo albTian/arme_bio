@@ -12,6 +12,7 @@ import re
 import glob
 import numpy as np
 import datetime
+import csv
 
 samples = []
 
@@ -77,6 +78,14 @@ def save_txt(buff, txtfile):
     text_file.write('\n')
     text_file.close()
 
+
+def write_header(filename):
+    with open(filename, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        header = [str(i) for i in range(125)]
+        writer.writerow(header)
+
+
 def generate_filename(dir):
     # Get the current date
     now = datetime.datetime.now()
@@ -84,7 +93,7 @@ def generate_filename(dir):
     month = now.strftime("%m")
 
     # Get the number of CSV files in the directory that match the date format
-    matching_files = [f for f in os.listdir(dir) if f.endswith('.csv') and f.startswith(f'{day}-{month}-')]
+    matching_files = [f for f in os.listdir(dir) if f.endswith('.csv') and f.startswith(f'{month}-{day}-')]
     number = len(matching_files) + 1
 
     # Generate the filename
@@ -122,14 +131,21 @@ def run(dir):
 
     second = 0
     sample_rate = 125   # CHANGE THIS TO MATCH ARDUINO SAMPLE RATE
+    squeeze = False
 
+    write_header(filename)
+
+    relaxed_samples = []
+    squeezed_samples = []
     while (second < 30):
         samples = []
 
         if second % 10 == 0:
             print("relax your grip...")
+            squeeze = False
         if second % 10 == 5:
             print("SQUEEZE DA BOTTLE")
+            squeeze = True
 
         for _ in range(sample_rate):
             sample = (float)(ser.readline().decode().rstrip('\n'))
@@ -138,12 +154,44 @@ def run(dir):
         save_txt(samples, filename)
         # print(f'{second+1}: Done writing to ' + filename)
         mean = np.mean(samples)
+        if squeeze:
+            squeezed_samples.append(mean)
+        else:
+            relaxed_samples.append(mean)
         print(f'{second}: {mean}')
         second += 1
 
     print(f"Data collection complete! Check {filename}")
+    relaxed_mean = np.mean(relaxed_samples)
+    squeezed_mean = np.mean(squeezed_samples)
+    print(f"relaxed score: {relaxed_mean}, squeezed score: {squeezed_mean}, diff: {relaxed_mean - squeezed_mean}")
+
+    relaxed_std = np.std(relaxed_samples)
+    squeezed_std = np.std(squeezed_samples)
+    print(f"relaxed std: {relaxed_std}, squeezed std: {squeezed_std}")
     ser.close()
 
+
+class NormalDistribution:
+    def __init__(self, mean=0, std=1):
+        self.mean = mean
+        self.std = std
+
+    def add_data(self, data):
+        # Calculate the mean and standard deviation of the existing data
+        n = len(data)
+        old_mean = self.mean
+        old_var = self.std**2
+
+        # Calculate the mean and standard deviation of the combined data
+        new_mean = np.mean(data)
+        new_var = np.var(data)
+        combined_mean = (n * old_mean + new_mean) / (n + 1)
+        combined_var = (n * old_var + (n - 1) * new_var + n * (new_mean - old_mean)**2) / n
+
+        # Update the object with the new mean and standard deviation
+        self.mean = combined_mean
+        self.std = np.sqrt(combined_var)
 
 if __name__ == "__main__":
     if (len(sys.argv) != 2):
