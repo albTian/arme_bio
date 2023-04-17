@@ -14,6 +14,8 @@ import numpy as np
 import datetime
 import csv
 
+from vis_data import visualize_csv_data
+
 samples = []
 
 # Serial functions
@@ -170,6 +172,7 @@ def run(dir):
     squeezed_std = np.std(squeezed_samples)
     print(f"relaxed std: {relaxed_std}, squeezed std: {squeezed_std}")
     ser.close()
+    visualize_csv_data(filename)
 
 
 class NormalDistribution:
